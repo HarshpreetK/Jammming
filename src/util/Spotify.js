@@ -17,7 +17,8 @@ const Spotify = {
       window.history.pushState('Access Token', null, '/');
       return userAccessToken;
     } else {
-      window.location = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&redirect_uri=${redirect_uri}&scope=user-read-private%20user-read-email&response_type=token`;
+      const url = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&response_type=token&scope=playlist-modify-public&redirect_uri=${redirect_uri}`;
+      window.location = url;
     }
 
   },
@@ -46,30 +47,38 @@ const Spotify = {
   },
 
   savePlaylist(playlistName, trackURIs){
-    if(!playlistName || !trackURIs){
+    let accessToken = Spotify.getUserAccessToken();
+    const headers = {
+      Authorization: `Bearer ${accessToken}`,
+    };
+
+    if(!playlistName || !trackURIs.length){
       return;
-    } else {
-      let accessToken = Spotify.getUserAccessToken();
-      const headers = {
-        Authorization: `Bearer ${accessToken}`,
-      };
-      //let userID;
+    }
+
+      let userID='';
+      let playlistID='';
+
+
 
       return fetch('https://api.spotify.com/v1/me',{
         headers: headers,
       }).then( response => {
-        return response.json();
+        const jsonResponse = response.json();
+        return jsonResponse;
       }).then( jsonResponse => {
-        let userID = jsonResponse.id;
+        userID = jsonResponse.id;
 
               return fetch(`https://api.spotify.com/v1/users/${userID}/playlists`, {
                 headers: headers,
                 method: 'POST',
                 body: JSON.stringify({name: playlistName})
               }).then(response => {
-                return response.json();
+                const jsonResponse = response.json();
+                return jsonResponse;
               }).then( jsonResponse => {
-                  let playlistID = jsonResponse.id;
+                  playlistID = jsonResponse.id;
+                  console.log(playlistID);
 
                                 return fetch(`https://api.spotify.com/v1/users/${userID}/playlists/${playlistID}/tracks`, {
                                   headers: headers,
@@ -79,9 +88,6 @@ const Spotify = {
               })
 
       })
-
-
-    }
   },
 
 
